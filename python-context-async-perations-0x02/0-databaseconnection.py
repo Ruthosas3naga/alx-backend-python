@@ -1,15 +1,15 @@
-import sqlite3
+from contextlib import contextmanager
 
-# ✅ Class-based context manager
+@contextmanager
 class DatabaseConnection:
     def __init__(self, db_name):
-        self.db_name = db_name
-        self.conn = None
+        self.db_name=db_name
+        self.conn=None
 
     def __enter__(self):
         self.conn = sqlite3.connect(self.db_name)
         print("[INFO] Database connected.")
-        return self.conn  # give the connection to the with-block
+        return self.conn  # gives the connection to the 'with' block
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.conn:
@@ -18,11 +18,6 @@ class DatabaseConnection:
 
         if exc_type:
             print(f"[ERROR] An error occurred: {exc_val}")
-            return False  # re-raises the error if any
+            # Returning False means any error is still raised
+            return False
 
-# ✅ Use the context manager to run a query
-with DatabaseConnection('users.db') as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users")
-    results = cursor.fetchall()
-    print("[RESULTS]", results)
