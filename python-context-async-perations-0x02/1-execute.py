@@ -1,30 +1,29 @@
 import sqlite3
 
-# Step 1: Create the class-based context manager
-class DatabaseConnection:
-    def __init__(self, db_name):
+# Class-based custom context manager
+class ExecuteQuery:
+    def __init__(self, db_name, query, params=()):
         self.db_name = db_name
+        self.query = query
+        self.params = params
         self.conn = None
+        self.cursor = None
 
     def __enter__(self):
         self.conn = sqlite3.connect(self.db_name)
-        print("[INFO] Connected to database.")
-        return self.conn  # this is what you get in the 'as' part
+        self.cursor = self.conn.cursor()
+        self.cursor.execute(self.query, self.params)
+        return self.cursor.fetchall()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.conn:
             self.conn.close()
-            print("[INFO] Database connection closed.")
 
-        if exc_type:
-            print(f"[ERROR] Something went wrong: {exc_val}")
-            return False  # Let Python raise the error
+# Usage of the context manager
+query = "SELECT * FROM users WHERE age > ?"
+params = (25,)
 
-# Step 2: Use it with the 'with' statement to run the query
-with DatabaseConnection('users.db') as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users")
-    results = cursor.fetchall()
-    print("[RESULTS]")
+with ExecuteQuery("users.db", query, params) as results:
+    print("Query Results:")
     for row in results:
         print(row)

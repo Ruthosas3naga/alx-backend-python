@@ -1,23 +1,27 @@
-from contextlib import contextmanager
+import sqlite3
 
-@contextmanager
+# Class-based context manager to manage DB connection
 class DatabaseConnection:
     def __init__(self, db_name):
-        self.db_name=db_name
-        self.conn=None
+        self.db_name = db_name
+        self.conn = None
 
     def __enter__(self):
+        # Open the database connection
         self.conn = sqlite3.connect(self.db_name)
-        print("[INFO] Database connected.")
-        return self.conn  # gives the connection to the 'with' block
+        return self.conn
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        # Close the connection automatically
         if self.conn:
             self.conn.close()
-            print("[INFO] Database connection closed.")
 
-        if exc_type:
-            print(f"[ERROR] An error occurred: {exc_val}")
-            # Returning False means any error is still raised
-            return False
+# Use the context manager to perform a query
+with DatabaseConnection("users.db") as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users")
+    results = cursor.fetchall()
 
+    print("Query Results:")
+    for row in results:
+        print(row)
